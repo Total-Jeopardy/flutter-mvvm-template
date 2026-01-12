@@ -1,88 +1,57 @@
-Flutter Modular Monolith Template (MVVM + Riverpod)
+🚀 Flutter Modular Monolith Template
+MVVM • Riverpod • Production-Ready
 
 A production-ready Flutter template designed to start any app with minimal setup.
-The goal of this template is simple:
 
-Solve infrastructure once. Build apps fast.
+Goal: solve infrastructure once, so future apps are mostly configuration + UI work.
 
-This template standardizes networking, authentication, state management, error handling, routing, and project structure so future apps focus almost entirely on UI and business logic.
+📌 Key Features
 
-Table of Contents
+✅ Modular Monolith architecture
 
-Philosophy
+✅ MVVM with Riverpod
 
-Architecture Overview
+✅ Reusable networking layer
 
-Project Structure
+✅ Secure authentication & token lifecycle
 
-Data Flow
+✅ Centralized routing with guards
 
-Core Concepts
+✅ Global error handling & logging
 
-Result & Errors
+✅ Environment-based configuration
 
-Networking
+✅ Built for scale, not demos
 
-Authentication & Session
+🧠 Philosophy
 
-State Management (MVVM)
+This template is opinionated by design.
 
-UI Messages & One-off Events
+It prioritizes:
 
-Routing & Guards
+Consistency over flexibility
 
-Environment & Configuration
+Predictability over cleverness
 
-How to Start a New App
+Speed of delivery over rewrites
 
-What You Change Per App
+If a new app requires rewriting auth, networking, or state management, the template has failed.
 
-What You Must NOT Change
-
-Commands
-
-Testing
-
-Extending the Template
-
-Versioning & Maintenance
-
-Philosophy
-
-This template follows a few strict principles:
-
-Modular Monolith
-One app, one codebase, clear feature boundaries. No premature microservices thinking.
-
-MVVM with Riverpod
-UI is dumb. ViewModels coordinate state. Business logic is testable.
-
-Infrastructure First
-Networking, auth, error handling, logging, routing, and configuration are solved once.
-
-Configuration over Rewriting
-New apps should require changing base URL, endpoints, and UI only.
-
-If a new app requires rewriting core infrastructure, the template has failed.
-
-Architecture Overview
-
-High-level layers:
-
+🏗 Architecture Overview
 UI (Widgets)
    ↓
-ViewModels (MVVM, Riverpod)
+ViewModels (MVVM)
    ↓
-Repositories / Services
+Services / Repositories
    ↓
 ApiClient (core/network)
    ↓
 HTTP Transport
 
 
-Cross-cutting concerns (auth, logging, errors, env config) live in core/.
+Cross-cutting concerns (auth, errors, logging, env config) live in core/.
 
-Project Structure
+📂 Project Structure
 lib/
 ├── app/
 │   ├── app.dart
@@ -90,11 +59,11 @@ lib/
 │   └── router.dart
 │
 ├── core/
-│   ├── config/           # env, flavors, app config
+│   ├── config/           # Env, flavors
 │   ├── errors/           # AppError hierarchy
-│   ├── network/          # ApiClient, transport, interceptors, auth plumbing
+│   ├── network/          # ApiClient, auth, interceptors
 │   ├── presentation/     # AsyncState, ViewModel base, UiMessage
-│   └── utils/            # logger, helpers
+│   └── utils/            # Logger, helpers
 │
 ├── modules/
 │   └── <feature>/
@@ -104,31 +73,23 @@ lib/
 │
 └── main.dart
 
-Key rule
+🔒 Architecture Rules
 
-core/ must never depend on modules/
+core/ must never import from modules/
 
-modules/ may depend on core/
+modules/ may import from core/
 
-Data Flow
+UI never talks to HTTP directly
 
-Standard flow for all features:
-
+🔁 Data Flow
 Widget
  → ViewModel (StateNotifierVm)
    → Service / Repository
      → ApiClient
        → NetworkTransport
 
-
-UI never talks to HTTP
-
-ViewModels never parse JSON
-
-Services never emit UI state
-
-Core Concepts
-Result & Errors
+🧩 Core Concepts
+1️⃣ Result & Error Handling
 
 All non-UI operations return:
 
@@ -143,61 +104,57 @@ AuthError
 
 ValidationError
 
-Custom domain errors (extend AppError)
+Custom domain errors
 
-This avoids exception-driven flow and keeps ViewModels predictable.
+No exception-driven UI logic.
 
-Networking
+2️⃣ Networking
 
 Located in core/network.
 
-Key components:
+Key rules:
 
-ApiClient – single entry point for all requests
+Features never use http or dio
 
-ApiRequest – pure request data
+All requests go through ApiClient
 
-NetworkTransport – HTTP implementation (swappable)
+Transport is swappable
 
-Interceptors – auth headers, logging, retry
+Logging is environment-controlled
 
-Environment-controlled logging
+3️⃣ Authentication & Session
 
-Features never use http or dio directly.
-
-Switching HTTP clients requires changing one place.
-
-Authentication & Session
-
-Auth is treated as infrastructure, not UI.
+Auth is infrastructure, not UI.
 
 Includes:
 
 Secure token storage (Keychain / EncryptedSharedPreferences)
 
-Refresh token flow with single-flight concurrency protection
+Refresh token flow (single-flight, retry-once)
 
-Retry-once logic on 401
+Central AuthSessionController
 
-Central AuthSessionController (no polling)
+Routing reacts instantly to login/logout
 
-Routing reacts instantly to login/logout without timers.
+❌ No polling, ❌ no battery drain
 
-State Management (MVVM)
+4️⃣ State Management (MVVM)
 
-Located in core/presentation/viewmodel.
+Persistent UI state uses:
 
-AsyncState<T> – persistent UI state
+AsyncState<T>
+ ├── UiIdle
+ ├── UiLoading
+ ├── UiData<T>
+ └── UiError
 
-UiIdle
 
-UiLoading
+ViewModels extend:
 
-UiData<T>
+StateNotifierVm<T>
 
-UiError
 
-StateNotifierVm<T> – base ViewModel with helpers:
+With helpers like:
 
 run()
 
@@ -205,25 +162,21 @@ applyResult()
 
 setLoading / setData / setError
 
-UI simply reacts to state.
+5️⃣ UI Messages (One-off Events)
 
-UI Messages & One-off Events
+Snackbars, dialogs, and toasts use:
 
-Persistent state ≠ one-off UI events.
-
-Handled via:
-
-UiMessage (success, error, warning, info)
+UiMessage
 
 UiEvent<T> (consume once)
 
-ErrorToUiMessage mapper (AppError → human-safe message)
+ErrorToUiMessage mapper
 
-Prevents snackbars/dialogs from reappearing on rebuilds.
+Prevents duplicate UI events on rebuilds.
 
-Routing & Guards
+6️⃣ Routing & Guards
 
-Routing is centralized in app/router.dart using go_router.
+Routing lives in app/router.dart using go_router.
 
 Features:
 
@@ -231,17 +184,17 @@ Splash → Login → Home flow
 
 Auth-aware redirects
 
-Refresh tied to AuthSessionController
-
 No redirect loops
 
-RBAC / role checks are not forced but can be layered later.
+Centralized navigation logic
 
-Environment & Configuration
+RBAC is optional, not forced.
 
-Environment is controlled via --dart-define.
+🌍 Environment & Configuration
 
-Supported flavors
+Configured via --dart-define.
+
+Supported Flavors
 
 dev
 
@@ -262,35 +215,35 @@ Base URL
 
 Network logging
 
-Body logging (disabled by default in prod)
+Body logging (off by default in prod)
 
-How to Start a New App
+🚀 Starting a New App
 
-Click “Use this template” on GitHub
+Click Use this template on GitHub
 
-Rename package / app identifiers
+Rename app/package identifiers
 
 Set base URL via --dart-define
 
-Create feature modules under modules/
+Add features under modules/
 
 Build UI + ViewModels
 
-You should not touch core infrastructure.
+👉 You should not touch core infrastructure.
 
-What You Change Per App
+✏️ What You Change Per App
 
-Base URL (API_BASE_URL)
+API_BASE_URL
 
-Flavor (FLAVOR)
+FLAVOR
 
-Feature modules inside modules/
+Feature modules (modules/*)
 
 Endpoints, DTOs, mappers
 
-UI and navigation destinations
+UI & navigation destinations
 
-What You Must NOT Change
+🚫 What You Must NOT Change
 
 These are template primitives:
 
@@ -300,15 +253,11 @@ core/errors
 
 core/network
 
-core/presentation (AsyncState, ViewModel base, UiMessage)
+core/presentation primitives
 
-If you feel the need to change these, it’s a signal to:
+If you feel the need to change these, evolve the template version instead.
 
-either extend them
-
-or evolve the template version
-
-Commands
+🧪 Commands
 Run (dev)
 flutter run \
   --dart-define=FLAVOR=dev \
@@ -323,15 +272,15 @@ dart format .
 Test
 flutter test
 
-Testing
+🧪 Testing Support
 
-The template includes:
+Included:
 
-Fake network transport for tests
+Fake network transport
 
-Provider overrides for dependency injection
+Provider overrides
 
-Recommended testing focus:
+Recommended focus:
 
 ViewModels
 
@@ -339,41 +288,42 @@ Services / repositories
 
 Auth session transitions
 
-UI tests are optional and app-specific.
+🔧 Extending the Template
 
-Extending the Template
-
-Only extend the template when:
+Only extend when:
 
 You hit the same problem in 2+ real apps
 
 You can extract a reusable primitive
 
-Examples of valid future extensions:
+Good future candidates:
 
-Pagination helper
+Pagination
 
-Caching layer
+Caching
 
 Feature flags
 
-Role/permission guards
+Role-based guards
 
 Avoid speculative additions.
 
-Versioning & Maintenance
+🏷 Versioning & Maintenance
 
 Template versions are tagged (e.g. v1.0.0-template)
 
-Apps are created from a tag, not from main
+Apps should be created from tags
 
 Template evolves based on real usage
 
-Final Note
+✅ Final Note
 
-This template is intentionally opinionated.
+This template trades flexibility for speed, safety, and consistency.
 
-It trades flexibility for speed, safety, and consistency.
-If you follow the rules, new apps become configuration + UI work, not infrastructure rewrites.
+If followed correctly, new apps become:
 
-Happy building.
+configuration + UI work
+
+—not infrastructure rewrites.
+
+Happy building 🚀
