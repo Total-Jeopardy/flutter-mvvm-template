@@ -39,7 +39,7 @@ class _GoRouterRefreshNotifier extends ChangeNotifier {
   _GoRouterRefreshNotifier(this.ref) {
     ref.listen<AuthSession>(
       authSessionControllerProvider,
-      (_, __) => notifyListeners(),
+      (_, _) => notifyListeners(),
     );
   }
 

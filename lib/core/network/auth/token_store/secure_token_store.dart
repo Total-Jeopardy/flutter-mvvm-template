@@ -17,6 +17,7 @@ class SecureTokenStore implements TokenStore {
   /// - iOS: Keychain, with a sane accessibility level
   static FlutterSecureStorage buildDefaultStorage() {
     const android = AndroidOptions(
+      // ignore: deprecated_member_use
       encryptedSharedPreferences: true,
       // Optional hardening knobs (generally safe defaults):
       // resetOnError: true,

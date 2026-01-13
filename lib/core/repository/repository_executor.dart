@@ -1,3 +1,5 @@
+// ignore_for_file: unintended_html_in_doc_comment
+
 import 'package:sly_killer_template/core/network/api_client/api_client.dart';
 import 'package:sly_killer_template/core/network/request/api_request.dart';
 import 'package:sly_killer_template/core/result/api_result/result.dart';

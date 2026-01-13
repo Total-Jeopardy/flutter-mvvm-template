@@ -4,8 +4,8 @@ class ValidationError extends AppError {
   final Map<String, String> fieldErrors;
 
   const ValidationError({
-    required String message,
+    required super.message,
     required this.fieldErrors,
-    String? code,
-  }) : super(message: message, code: code);
+    super.code,
+  });
 }
